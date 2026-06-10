@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توثيق مشروع .NET Clean Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    line-height: 1.7;
+    direction: rtl;
+  }
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #1e3a5f;
+    padding: 40px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 70% 30%, rgba(59,130,246,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .header .subtitle {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+  .header .subtitle span { color: #60a5fa; -webkit-text-fill-color: #60a5fa; }
+  .header .meta {
+    margin-top: 16px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .header .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+  .header .meta-item .badge {
+    background: #1e293b;
+    padding: 2px 10px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    color: #94a3b8;
+  }
+  /* Container */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* Section */
+  .section {
+    margin: 40px 0;
+    background: #1e293b;
+    border-radius: 16px;
+    border: 1px solid #334155;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #1e293b, #1a2235);
+    border-bottom: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header:hover { background: #1e2a3f; }
+  .section-header .icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.2rem; font-weight: 700; flex: 1; }
+  .section-header .toggle {
+    color: #64748b;
+    transition: transform 0.3s;
+    font-size: 1.2rem;
+  }
+  .section-header.collapsed .toggle { transform: rotate(-90deg); }
+  .section-body { padding: 0; }
+  .section-body.collapsed { display: none; }
+
+  /* Tree */
+  .tree { padding: 16px 24px 24px; }
+  .tree-node {
+    margin: 2px 0;
+    padding: 4px 0;
+    position: relative;
+  }
+  .tree-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .tree-row:hover { background: rgba(59,130,246,0.08); }
+  .tree-row .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    direction: ltr;
+    text-align: left;
+    color: #e2e8f0;
+  }
+  .tree-row .name.folder { color: #fbbf24; }
+  .tree-row .name.file { color: #94a3b8; }
+  .tree-row .desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-right: 8px;
+    flex: 1;
+  }
+  .tree-row .badge-type {
+    font-size: 0.65rem;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-right: auto;
+    direction: ltr;
+  }
+  .badge-domain { background: rgba(239,68,68,0.15); color: #f87171; }
+  .badge-application { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .badge-infrastructure { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .badge-presentation { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .badge-test { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .badge-root { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+  /* Detail Panel */
+  .detail-panel {
+    display: none;
+    margin: 8px 16px 8px 24px;
+    padding: 16px 20px;
+    background: #0f172a;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    border-right: 3px solid #3b82f6;
+  }
+  .detail-panel.open { display: block; }
+  .detail-panel .detail-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #f1f5f9;
+  }
+  .detail-panel .detail-desc {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    line-height: 1.8;
+  }
+  .detail-panel .detail-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .detail-panel .detail-tech .tech-tag {
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .detail-panel .detail-sub {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #334155;
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+  .detail-panel .detail-sub strong { color: #e2e8f0; }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 24px;
+  }
+  .summary-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .summary-card:hover { border-color: #3b82f6; }
+  .summary-card .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .summary-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .summary-card p {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  /* Tech Stack */
+  .tech-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 24px;
+  }
+  .tech-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 18px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    min-width: 80px;
+  }
+  .tech-item .tech-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  .tech-item .tech-version {
+    font-size: 0.65rem;
+    color: #64748b;
+  }
+
+  /* Flow Diagram */
+  .flow-diagram {
+    padding: 24px;
+    overflow-x: auto;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 80px;
+  }
+  .flow-arrow { color: #475569; font-size: 1.2rem; }
+
+  /* Icons */
+  .icon-d { background: rgba(239,68,68,0.15); color: #f87171; }
+  .icon-a { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .icon-i { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .icon-p { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .icon-t { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .icon-r { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 32px 24px;
+    border-top: 1px solid #1e293b;
+    color: #475569;
+    font-size: 0.85rem;
+    margin-top: 40px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header h1 { font-size: 1.6rem; }
+    .tree-row { flex-wrap: wrap; }
+    .tree-row .desc { width: 100%; margin-right: 28px; }
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ====== HEADER ====== -->
+<div class="header">
+  <div class="header-content">
+    <h1>🏗️ .NET Clean Architecture</h1>
+    <div class="subtitle">
+      توثيق كامل للمشروع — <span>.NET 10 • CQRS • DDD • Clean Architecture</span>
+    </div>
+    <div class="meta">
+      <div class="meta-item">📦 <span class="badge">~50+ ملف</span></div>
+      <div class="meta-item">🔧 <span class="badge">.NET 10.0</span></div>
+      <div class="meta-item">🗄️ <span class="badge">PostgreSQL</span></div>
+      <div class="meta-item">🧪 <span class="badge">xUnit + Moq</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ====== TECH STACK ====== -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="icon icon-r">⚙️</div>
+    <h2>التقنيات المستخدمة <span style="font-size:0.75rem;color:#64748b;font-weight:400;">Tech Stack</span></h2>
+    <div class="toggle">▼</div>
+  </div>
+  <div class="section-body">
+    <div class="tech-stack">
+      <div class="tech-item"><span class="tech-name">.NET</span><span class="tech-version">10.0</span></div>
+      <div class="tech-item"><span class="tech-name">EF Core</span><span class="tech-version">8.0.4</span></div>
+      <div class="tech-item"><span class="tech-name">Npgsql</span><span class="tech-version">8.0.4</span></div>
+      <div class="tech-item"><span class="tech-name">MediatR</span><span class="tech-version">12.2.0</span></div>
+      <div class="tech-item"><span class="tech-name">FluentValidation</span><span class="tech-version">11.9.0</span></div>
+      <div class="tech-item"><span class="tech-name">AutoMapper</span><span class="tech-version">13.0.1</span></div>
+      <div class="tech-item"><span class="tech-name">ASP.NET Identity</span><span class="tech-version">8.0.4</span></div>
+      <div class="tech-item"><span class="tech-name">BCrypt</span><span class="tech-version">4.0.3</span></div>
+      <div class="tech-item"><span class="tech-name">Swagger</span><span class="tech-version">6.5.0</span></div>
+      <div class="tech-item"><span class="tech-name">xUnit</span><span class="tech-version">2.8.0</span></div>
+      <div class="tech-item"><span class="tech-name">Moq</span><span class="tech-version">4.20.70</span></div>
+      <div class="tech-item"><span class="tech-name">Docker</span><span class="tech-version">Postgres 16</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ARCHITECTURE OVERVIEW ====== -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="icon icon-r">🏛️</div>
+    <h2>نظرة عامة على المعمارية <span style="font-size:0.75rem;color:#64748b;font-weight:400;">Architecture Overview</span></h2>
+    <div class="toggle">▼</div>
+  </div>
+  <div class="section-body">
+    <div style="padding:24px;">
+      <p style="color:#94a3b8;margin-bottom:16px;font-size:0.9rem;">
+        المشروع مبني على <strong style="color:#e2e8f0;">Clean Architecture</strong> (المعمارية النظيفة) والتي تفصل الكود إلى 4 طبقات رئيسية.
+        كل طبقة تعتمد فقط على ما هو داخلها — مبدأ <strong style="color:#60a5fa;">Dependency Inversion</strong>.
+      </p>
+
+      <!-- Flow Diagram -->
+      <div class="flow-diagram" style="background:#0f172a;border-radius:12px;border:1px solid #334155;margin-bottom:20px;">
+        <div class="flow-row" style="justify-content:center;">
+          <div class="flow-box" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);">🌐 Client</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3);">🎯 Presentation<br><small style="font-weight:400;">API / Controllers</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);">📋 Application<br><small style="font-weight:400;">CQRS / MediatR</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box" style="background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);">🗄️ Infrastructure<br><small style="font-weight:400;">EF Core / DB</small></div>
+          <span class="flow-arrow">↔</span>
+          <div class="flow-box" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);">💡 Domain<br><small style="font-weight:400;">Entities / Rules</small></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
+        <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;border-right:3px solid #ef4444;">
+          <strong style="color:#f87171;">💡 Domain Layer</strong>
+          <p style="color:#64748b;font-size:0.82rem;margin-top:6px;">الطبقة الداخلية — كيانات الأعمال، القواعد، القيم، الاستثناءات. لا تعتمد على أي مكتبة خارجية.</p>
+        </div>
+        <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;border-right:3px solid #3b82f6;">
+          <strong style="color:#60a5fa;">📋 Application Layer</strong>
+          <p style="color:#64748b;font-size:0.82rem;margin-top:6px;">طبقة حالات الاستخدام — أوامر CQRS، استعلامات، تحقق، خرائط. تعتمد فقط على Domain.</p>
+        </div>
+        <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;border-right:3px solid #22c55e;">
+          <strong style="color:#4ade80;">🗄️ Infrastructure Layer</strong>
+          <p style="color:#64748b;font-size:0.82rem;margin-top:6px;">طبقة البنية التحتية — قاعدة البيانات، Identity، الخدمات الخارجية (إيميل، تخزين، دفع).</p>
+        </div>
+        <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;border-right:3px solid #a855f7;">
+          <strong style="color:#c084fc;">🎯 Presentation Layer</strong>
+          <p style="color:#64748b;font-size:0.82rem;margin-top:6px;">طبقة العرض — API controllers, middlewares, filters. تستقبل الطلبات وتوجهها للـ Application.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== FULL STRUCTURE ====== -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="icon icon-r">📂</div>
+    <h2>هيكل المشروع الكامل <span style="font-size:0.75rem;color:#64748b;font-weight:400;">Full Project Structure</span></h2>
+    <div class="toggle">▼</div>
+  </div>
+  <div class="section-body">
+    <div class="tree" id="tree-root"></div>
+  </div>
+</div>
+
+<!-- ====== DATA FLOW ====== -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="icon icon-p">🔄</div>
+    <h2>تدفق البيانات <span style="font-size:0.75rem;color:#64748b;font-weight:400;">Data Flow</span></h2>
+    <div class="toggle">▼</div>
+  </div>
+  <div class="section-body">
+    <div style="padding:24px;">
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:20px;margin-bottom:16px;">
+        <h3 style="color:#e2e8f0;font-size:1rem;margin-bottom:12px;">📥 مثال: إنشاء منتج جديد (CreateProduct)</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem;color:#94a3b8;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;">
+          <div style="display:flex;gap:8px;"><span style="color:#60a5fa;">1.</span> POST /api/products <span style="color:#64748b;">← JSON body</span></div>
+          <div style="display:flex;gap:8px;padding-right:24px;"><span style="color:#22c55e;">→</span> ProductsController.Create(CreateProductDto)</div>
+          <div style="display:flex;gap:8px;padding-right:48px;"><span style="color:#22c55e;">→</span> MediatR sends CreateProductCommand</div>
+          <div style="display:flex;gap:8px;padding-right:72px;"><span style="color:#22c55e;">→</span> ValidationBehaviour ← FluentValidation</div>
+          <div style="display:flex;gap:8px;padding-right:72px;"><span style="color:#22c55e;">→</span> LoggingBehaviour ← ILogger</div>
+          <div style="display:flex;gap:8px;padding-right:72px;"><span style="color:#22c55e;">→</span> CreateProductCommandHandler</div>
+          <div style="display:flex;gap:8px;padding-right:96px;"><span style="color:#22c55e;">→</span> IRepository&lt;Product&gt;.AddAsync(product)</div>
+          <div style="display:flex;gap:8px;padding-right:96px;"><span style="color:#22c55e;">→</span> ApplicationDbContext → PostgreSQL</div>
+          <div style="display:flex;gap:8px;padding-right:48px;"><span style="color:#f87171;">←</span> Result&lt;int&gt;.Success(productId)</div>
+          <div style="display:flex;gap:8px;padding-right:24px;"><span style="color:#f87171;">←</span> 201 Created { id: productId }</div>
+        </div>
+      </div>
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:20px;">
+        <h3 style="color:#e2e8f0;font-size:1rem;margin-bottom:12px;">📤 مثال: جلب المنتجات (GetProducts)</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem;color:#94a3b8;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;">
+          <div style="display:flex;gap:8px;"><span style="color:#60a5fa;">1.</span> GET /api/products</div>
+          <div style="display:flex;gap:8px;padding-right:24px;"><span style="color:#22c55e;">→</span> ProductsController.GetAll()</div>
+          <div style="display:flex;gap:8px;padding-right:48px;"><span style="color:#22c55e;">→</span> MediatR sends GetProductsQuery</div>
+          <div style="display:flex;gap:8px;padding-right:72px;"><span style="color:#22c55e;">→</span> GetProductsQueryHandler</div>
+          <div style="display:flex;gap:8px;padding-right:96px;"><span style="color:#22c55e;">→</span> Repository&lt;Product&gt;.GetAllAsync()</div>
+          <div style="display:flex;gap:8px;padding-right:96px;"><span style="color:#22c55e;">→</span> AutoMapper: Product → ProductDto</div>
+          <div style="display:flex;gap:8px;padding-right:48px;"><span style="color:#f87171;">←</span> IReadOnlyList&lt;ProductDto&gt;</div>
+          <div style="display:flex;gap:8px;padding-right:24px;"><span style="color:#f87171;">←</span> 200 OK [{ products }]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== FOOTER ====== -->
+<div class="footer">
+  تم إنشاء هذا التوثيق تلقائياً من تحليل كامل لمشروع .NET Clean Architecture &mdash; جميع الحقوق للمشروع الأصلي
+</div>
+
+</div><!-- /container -->
+
+<script>
+// DATA: Complete file/folder documentation
+const DATA = [
+  { name: "dotnet-architecture/", type: "folder", badge: "", desc: "جذر المشروع — Root directory of the .NET Clean Architecture solution" },
+  { name: "  .gitignore", type: "file", badge: "root", desc: "يتجاهل ملفات bin/obj/.vs/ — Standard .NET git ignore rules" },
+  { name: "  README.md", type: "file", badge: "root", desc: "شرح المشروع وكيفية تشغيله — Project overview, setup, and usage guide" },
+  { name: "  ARCHITECTURE.md", type: "file", badge: "root", desc: "توثيق المعمارية بالكامل (445 سطر) — Complete architecture documentation" },
+  { name: "  Directory.Build.props", type: "file", badge: "root", desc: "إعدادات مشتركة لكل المشاريع — Targets net10.0, Nullable enabled, Warnings as errors" },
+  { name: "  Dockerfile", type: "file", badge: "root", desc: "Multi-stage build للـ API — SDK 10.0 → publish → aspnet:10.0 runtime" },
+  { name: "  docker-compose.yml", type: "file", badge: "root", desc: "تشغيل API + PostgreSQL 16 — Orchestrates API and database containers" },
+  { name: "  Solution.sln", type: "file", badge: "root", desc: "ملف الحل — Links all 8 projects (4 source + 4 test)" },
+  { name: "",
+    desc: "─────────────────── src/ — الكود المصدري ───────────────────",
+    type: "separator"
+  },
+  { name: "  src/", type: "folder", badge: "", desc: "المجلد الرئيسي للكود المصدري — Main source code folder" },
+  { name: "    Domain/", type: "folder", badge: "domain", desc: "[الطبقة الأساسية] كيانات الأعمال والقواعد — لا تعتمد على أي مكتبة خارجية" },
+  { name: "      Domain.csproj", type: "file", badge: "domain", desc: "مشروع Domain — بدون أي NuGet packages (صفر تبعيات)" },
+  { name: "      Entities/", type: "folder", badge: "domain", desc: "كيانات المجال — الكيانات الأساسية للنظام" },
+  { name: "        Product.cs", type: "file", badge: "domain", desc: "منتج — يحتوي على Id, Name, Description, Price. يستخدم private setters مع تحقق من صحة السعر" },
+  { name: "        User.cs", type: "file", badge: "domain", desc: "مستخدم — Id, Name, Email, PasswordHash, Role. يدعم تحديث البروفايل" },
+  { name: "        Order.cs", type: "file", badge: "domain", desc: "طلب شراء — حالة آلية (state machine): Pending→Processing→Shipped→Delivered/Cancelled" },
+  { name: "      Enums/", type: "folder", badge: "domain", desc: "التعدادات — Enumerations المستخدمة في المجال" },
+  { name: "        OrderStatus.cs", type: "file", badge: "domain", desc: "حالات الطلب: Pending, Processing, Shipped, Delivered, Cancelled" },
+  { name: "        UserRole.cs", type: "file", badge: "domain", desc: "أدوار المستخدم: Admin, User, Moderator" },
+  { name: "      Events/", type: "folder", badge: "domain", desc: "أحداث المجال — Domain events (تحتاج تفعيل)" },
+  { name: "        OrderCreatedEvent.cs", type: "file", badge: "domain", desc: "حدث إنشاء الطلب — OrderId, UserId, OccurredOn" },
+  { name: "        UserRegisteredEvent.cs", type: "file", badge: "domain", desc: "حدث تسجيل المستخدم — UserId, Email, OccurredOn" },
+  { name: "      Exceptions/", type: "folder", badge: "domain", desc: "استثناءات مخصصة — Custom domain exceptions" },
+  { name: "        DomainException.cs", type: "file", badge: "domain", desc: "الاستثناء الأساسي لكل أخطاء قواعد العمل" },
+  { name: "        ProductNotFoundException.cs", type: "file", badge: "domain", desc: "استثناء عند عدم العثور على منتج — يحمل ProductId" },
+  { name: "      Interfaces/", type: "folder", badge: "domain", desc: "عقود (Contracts) — واجهات تعريفية للـ Repository و Unit of Work" },
+  { name: "        IRepository.cs", type: "file", badge: "domain", desc: "واجهة الـ Repository العامة: CRUD + GetAll" },
+  { name: "        IUnitOfWork.cs", type: "file", badge: "domain", desc: "واجهة Unit of Work: SaveChangesAsync للتحكم بالمعاملات" },
+  { name: "      ValueObjects/", type: "folder", badge: "domain", desc: "كائنات القيمة — immutable objects ذات مقارنة بالقيمة" },
+  { name: "        Address.cs", type: "file", badge: "domain", desc: "عنوان — Street, City, Country, PostalCode مع تحقق من الحقول الإجبارية" },
+  { name: "        Money.cs", type: "file", badge: "domain", desc: "نقود — Amount + Currency. يدعم الجمع والطرح مع نفس العملة" },
+  { name: "",
+    desc: "───────────────────",
+    type: "separator"
+  },
+  { name: "    Application/", type: "folder", badge: "application", desc: "[طبقة الاستخدام] أوامر واستعلامات CQRS — تعتمد فقط على Domain" },
+  { name: "      Application.csproj", type: "file", badge: "application", desc: "مشروع Application — MediatR, FluentValidation, AutoMapper, BCrypt" },
+  { name: "      DependencyInjection.cs", type: "file", badge: "application", desc: "تسجيل خدمات الـ Application — MediatR, AutoMapper, Validators, Behaviours" },
+  { name: "      Common/", type: "folder", badge: "application", desc: "مشتركات — أدوات وواجهات مشتركة بين كل الـ Features" },
+  { name: "        Behaviours/", type: "folder", badge: "application", desc: "سلوكيات MediatR — Cross-cutting concerns للـ pipeline" },
+  { name: "          LoggingBehaviour.cs", type: "file", badge: "application", desc: "يسجل كل طلب (Request) قبل وبعد المعالجة — Request logging pipeline behaviour" },
+  { name: "          ValidationBehaviour.cs", type: "file", badge: "application", desc: "يتحقق من صحة البيانات قبل تنفيذ الأمر — يشغل FluentValidation تلقائياً" },
+  { name: "        Interfaces/", type: "folder", badge: "application", desc: "واجهات خدمات خارجية — Contracts for external services" },
+  { name: "          IDateTime.cs", type: "file", badge: "application", desc: "واجهة الوقت — لتسهيل اختبار التواريخ (غير مستخدم حالياً)" },
+  { name: "          IEmailService.cs", type: "file", badge: "application", desc: "واجهة إرسال الإيميل — SendEmailAsync(to, subject, body)" },
+  { name: "        Mappings/", type: "folder", badge: "application", desc: "خرائط AutoMapper — Object mapping config" },
+  { name: "          MappingProfile.cs", type: "file", badge: "application", desc: "تعريف الخرائط: Product ↔ ProductDto, CreateProductDto → Product" },
+  { name: "        Models/", type: "folder", badge: "application", desc: "نماذج مشتركة — Shared response/pagination models" },
+  { name: "          PaginatedList.cs", type: "file", badge: "application", desc: "قائمة مُقسّمة (Paginated) — Items, PageNumber, PageSize, TotalCount" },
+  { name: "          Result.cs", type: "file", badge: "application", desc: "نمط النتيجة — Result&lt;T&gt;: Success(value) أو Failure(error) بدلاً من الاستثناءات" },
+  { name: "      Features/", type: "folder", badge: "application", desc: "الميزات — Features منظمة حسب المجال (Products, Users)" },
+  { name: "        Products/", type: "folder", badge: "application", desc: "ميزات المنتج — أوامر واستعلامات المنتجات" },
+  { name: "          Commands/", type: "folder", badge: "application", desc: "الأوامر (CUD) — أوامر الكتابة (Create, Update)" },
+  { name: "            CreateProduct/", type: "folder", badge: "application", desc: "أمر إنشاء منتج — CreateProductCommand" },
+  { name: "              CreateProductCommand.cs", type: "file", badge: "application", desc: "الأمر — record { Name, Description, Price } : IRequest&lt;Result&lt;int&gt;&gt;" },
+  { name: "              CreateProductCommandHandler.cs", type: "file", badge: "application", desc: "المعالج — ينشئ Product entity ويستخدم IRepository لإضافته" },
+  { name: "              CreateProductCommandValidator.cs", type: "file", badge: "application", desc: "التحقق — Name required (max 100), Description (max 500), Price > 0" },
+  { name: "            UpdateProduct/", type: "folder", badge: "application", desc: "أمر تحديث منتج — UpdateProductCommand" },
+  { name: "              UpdateProductCommand.cs", type: "file", badge: "application", desc: "الأمر — record { Id, Name, Description, Price } : IRequest&lt;Result&lt;int&gt;&gt;" },
+  { name: "              UpdateProductCommandHandler.cs", type: "file", badge: "application", desc: "المعالج — يبحث عن المنتج ثم يحدث البيانات باستخدام UpdateDetails()" },
+  { name: "              UpdateProductCommandValidator.cs", type: "file", badge: "application", desc: "التحقق — Id > 0, Name required (max 100), Price > 0" },
+  { name: "          Queries/", type: "folder", badge: "application", desc: "الاستعلامات (R) — استعلامات القراءة" },
+  { name: "            GetProductById/", type: "folder", badge: "application", desc: "استعلام جلب منتج حسب ID" },
+  { name: "              GetProductByIdQuery.cs", type: "file", badge: "application", desc: "الاستعلام — record GetProductByIdQuery(int Id) : IRequest&lt;ProductDto?&gt;" },
+  { name: "              GetProductByIdQueryHandler.cs", type: "file", badge: "application", desc: "المعالج — يستخدم IRepository ثم AutoMapper لتحويل Product → ProductDto" },
+  { name: "            GetProducts/", type: "folder", badge: "application", desc: "استعلام جلب كل المنتجات" },
+  { name: "              GetProductsQuery.cs", type: "file", badge: "application", desc: "الاستعلام — record GetProductsQuery : IRequest&lt;IReadOnlyList&lt;ProductDto&gt;&gt;" },
+  { name: "              GetProductsQueryHandler.cs", type: "file", badge: "application", desc: "المعالج — يجلب كل المنتجات ويحولها لـ ProductDto" },
+  { name: "          DTOs/", type: "folder", badge: "application", desc: "كائنات نقل البيانات — Data Transfer Objects" },
+  { name: "            CreateProductDto.cs", type: "file", badge: "application", desc: "DTO للإدخال — { Name, Description, Price } لربط البيانات من الطلب" },
+  { name: "            ProductDto.cs", type: "file", badge: "application", desc: "DTO للإخراج — { Id, Name, Description, Price } للرد على العميل" },
+  { name: "        Users/", type: "folder", badge: "application", desc: "ميزات المستخدم — أوامر واستعلامات المستخدمين" },
+  { name: "          RegisterUserCommand.cs", type: "file", badge: "application", desc: "أمر التسجيل — { Name, Email, Password, Role } → Result&lt;int&gt;" },
+  { name: "          RegisterUserCommandHandler.cs", type: "file", badge: "application", desc: "المعالج — يشفر كلمة المرور بـ BCrypt وينشئ User entity" },
+  { name: "          LoginUserCommand.cs", type: "file", badge: "application", desc: "أمر تسجيل الدخول — { Email, Password } → Result&lt;string&gt; (لا يوجد Handler بعد)" },
+  { name: "          GetUserByIdQuery.cs", type: "file", badge: "application", desc: "استعلام جلب مستخدم — GetUserByIdQuery(int Id) : IRequest&lt;User?&gt;" },
+  { name: "          GetUserByIdQueryHandler.cs", type: "file", badge: "application", desc: "المعالج — يبحث عن المستخدم في الـ Repository" },
+  { name: "",
+    desc: "───────────────────",
+    type: "separator"
+  },
+  { name: "    Infrastructure/", type: "folder", badge: "infrastructure", desc: "[طبقة البنية التحتية] قاعدة البيانات، Identity، خدمات خارجية" },
+  { name: "      Infrastructure.csproj", type: "file", badge: "infrastructure", desc: "مشروع Infrastructure — EF Core, Npgsql, ASP.NET Identity" },
+  { name: "      DependencyInjection.cs", type: "file", badge: "infrastructure", desc: "تسجيل خدمات الـ Infrastructure — DbContext, Identity, Repositories, Services" },
+  { name: "      Identity/", type: "folder", badge: "infrastructure", desc: "ASP.NET Core Identity — إدارة authentication/authorization" },
+  { name: "        ApplicationUser.cs", type: "file", badge: "infrastructure", desc: "مستخدم مخصص — IdentityUser مع إضافة FullName" },
+  { name: "        ApplicationRole.cs", type: "file", badge: "infrastructure", desc: "دور مخصص — IdentityRole" },
+  { name: "      Persistence/", type: "folder", badge: "infrastructure", desc: "قاعدة البيانات — EF Core DbContext, Configurations, Migrations, Repositories" },
+  { name: "        ApplicationDbContext.cs", type: "file", badge: "infrastructure", desc: "سياق قاعدة البيانات — DbSets: Products, Users, Orders" },
+  { name: "        Configurations/", type: "folder", badge: "infrastructure", desc: "إعدادات EF Core Fluent API — تكوين الجداول والعلاقات" },
+  { name: "          ProductConfiguration.cs", type: "file", badge: "infrastructure", desc: "تكوين جدول Products — أسماء الأعمدة، الأنواع، الحدود القصوى" },
+  { name: "          UserConfiguration.cs", type: "file", badge: "infrastructure", desc: "تكوين جدول Users — أسماء الأعمدة، الحقول الإجبارية" },
+  { name: "        Migrations/", type: "folder", badge: "infrastructure", desc: "هجرات قاعدة البيانات — EF Core Migrations" },
+  { name: "          20240101000000_InitialCreate.cs", type: "file", badge: "infrastructure", desc: "الهجرة الأولى — ينشئ جداول Products, Users, Orders" },
+  { name: "        Repositories/", type: "folder", badge: "infrastructure", desc: "تطبيقات الـ Repository — تنفيذ واجهات الوصول للبيانات" },
+  { name: "          Repository.cs", type: "file", badge: "infrastructure", desc: "تطبيق عام لـ IRepository&lt;T&gt; — CRUD باستخدام EF Core" },
+  { name: "          ProductRepository.cs", type: "file", badge: "infrastructure", desc: "تطبيق مخصص للمنتج — GetByPriceRangeAsync, SearchByNameAsync" },
+  { name: "          UnitOfWork.cs", type: "file", badge: "infrastructure", desc: "تطبيق Unit of Work — SaveChangesAsync" },
+  { name: "      Services/", type: "folder", badge: "infrastructure", desc: "خدمات خارجية — Placeholder/mock للخدمات (تحتاج توصيل فعلي)" },
+  { name: "        EmailService.cs", type: "file", badge: "infrastructure", desc: "إرسال الإيميل — حالياً مجرد تسجيل في الـ Logger (placeholder)" },
+  { name: "        FileStorageService.cs", type: "file", badge: "infrastructure", desc: "تخزين الملفات — Upload/Delete مع mock URL (placeholder)" },
+  { name: "        PaymentGatewayService.cs", type: "file", badge: "infrastructure", desc: "بوابة الدفع — ProcessPayment/RefundPayment (placeholder)" },
+  { name: "",
+    desc: "───────────────────",
+    type: "separator"
+  },
+  { name: "    Presentation/", type: "folder", badge: "presentation", desc: "[طبقة العرض] واجهة REST API" },
+  { name: "      API/", type: "folder", badge: "presentation", desc: "مشروع Web API — نقطة الدخول للتطبيق" },
+  { name: "        API.csproj", type: "file", badge: "presentation", desc: "مشروع API — Swagger, EF Tools. يعتمد على Application + Infrastructure" },
+  { name: "        Program.cs", type: "file", badge: "presentation", desc: "نقطة البداية — يضبط Controllers, Middlewares, Swagger, DI" },
+  { name: "        appsettings.json", type: "file", badge: "presentation", desc: "الإعدادات الرئيسية — PostgreSQL connection string, JWT config" },
+  { name: "        appsettings.Development.json", type: "file", badge: "presentation", desc: "إعدادات التطوير — Debug logging, SQL Server connection (ملاحظة: غير متوافق مع PostgreSQL)" },
+  { name: "        Controllers/", type: "folder", badge: "presentation", desc: "وحدات التحكم — REST API controllers (thin controllers)" },
+  { name: "          ProductsController.cs", type: "file", badge: "presentation", desc: "API المنتجات — GET, GET/{id}, POST, PUT — كلها تستخدم MediatR" },
+  { name: "          UsersController.cs", type: "file", badge: "presentation", desc: "API المستخدمين — GET/{id}, POST register, POST login" },
+  { name: "          AuthController.cs", type: "file", badge: "presentation", desc: "API المصادقة — POST login, POST register, POST refresh-token" },
+  { name: "        Filters/", type: "folder", badge: "presentation", desc: "فلاتر — Action filters للتحقق من صحة النموذج" },
+  { name: "          ValidationActionFilter.cs", type: "file", badge: "presentation", desc: "فلتر التحقق — يتحقق من ModelState ويعيد 400 مع أخطاء منسقة" },
+  { name: "        Middlewares/", type: "folder", badge: "presentation", desc: "وسطاء — Request pipeline middlewares" },
+  { name: "          GlobalExceptionHandlerMiddleware.cs", type: "file", badge: "presentation", desc: "معالج الأخطاء الشامل — يلتقط كل الاستثناءات ويعيد JSON منسق" },
+  { name: "          RequestLoggingMiddleware.cs", type: "file", badge: "presentation", desc: "تسجيل الطلبات — يسجل Method, Path, Status, Duration لكل طلب" },
+  { name: "        Models/", type: "folder", badge: "presentation", desc: "نماذج API — نماذج الرد الموحدة" },
+  { name: "          ApiResponse.cs", type: "file", badge: "presentation", desc: "الرد الموحد — { Success, Message, Data, Errors } لكل الـ endpoints" },
+  { name: "          PaginatedResponse.cs", type: "file", badge: "presentation", desc: "الرد المُقسّم — { Items, PageNumber, PageSize, TotalCount, TotalPages }" },
+  { name: "",
+    desc: "─────────────────── tests/ — اختبارات ───────────────────",
+    type: "separator"
+  },
+  { name: "  tests/", type: "folder", badge: "test", desc: "مجلد الاختبارات — Test projects (xUnit)" },
+  { name: "    Domain.Tests/", type: "folder", badge: "test", desc: "اختبارات Domain — xUnit + FluentAssertions" },
+  { name: "      Domain.Tests.csproj", type: "file", badge: "test", desc: "مشروع الاختبار — xUnit 2.8.0, FluentAssertions 6.12.0" },
+  { name: "      MoneyTests.cs", type: "file", badge: "test", desc: "اختبار Money — إنشاء، جمع، عملات مختلفة، المساواة (4 اختبارات)" },
+  { name: "      ProductTests.cs", type: "file", badge: "test", desc: "اختبار Product — إنشاء صحيح، سعر صفر، تحديث (3 اختبارات)" },
+  { name: "    Application.Tests/", type: "folder", badge: "test", desc: "اختبارات Application — xUnit + Moq" },
+  { name: "      Application.Tests.csproj", type: "file", badge: "test", desc: "مشروع الاختبار — Moq 4.20.70" },
+  { name: "      CreateProductCommandHandlerTests.cs", type: "file", badge: "test", desc: "اختبار CreateProductCommandHandler — يتحقق من نجاح الأمر ويعيد ID" },
+  { name: "      GetProductsQueryHandlerTests.cs", type: "file", badge: "test", desc: "اختبار GetProductsQueryHandler — يتحقق من جلب منتجين باستخدام AutoMapper حقيقي" },
+  { name: "    Infrastructure.Tests/", type: "folder", badge: "test", desc: "اختبارات Infrastructure" },
+  { name: "      Infrastructure.Tests.csproj", type: "file", badge: "test", desc: "مشروع الاختبار" },
+  { name: "      EmailServiceTests.cs", type: "file", badge: "test", desc: "اختبار EmailService — يتحقق من التسجيل بدون أخطاء" },
+  { name: "      ProductRepositoryTests.cs", type: "file", badge: "test", desc: "اختبارات Repository — حالياً مجرد stubs (تحتاج DB حقيقي)" },
+  { name: "    API.Tests/", type: "folder", badge: "test", desc: "اختبارات API" },
+  { name: "      API.Tests.csproj", type: "file", badge: "test", desc: "مشروع الاختبار" },
+  { name: "      AuthControllerTests.cs", type: "file", badge: "test", desc: "اختبارات AuthController — حالياً stubs (Assert.True(true))" },
+  { name: "      ProductsControllerTests.cs", type: "file", badge: "test", desc: "اختبارات ProductsController — حالياً stubs" }
+];
+
+// Build tree
+function buildTree() {
+  const root = document.getElementById('tree-root');
+  DATA.forEach((item, idx) => {
+    if (item.type === "separator") {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'padding:8px 12px;margin:8px 0;color:#475569;font-size:0.75rem;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;text-align:center;letter-spacing:1px;';
+      sep.textContent = item.desc;
+      root.appendChild(sep);
+      return;
+    }
+    const node = document.createElement('div');
+    node.className = 'tree-node';
+
+    const row = document.createElement('div');
+    row.className = 'tree-row';
+    row.onclick = () => toggleDetail(idx);
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = `name ${item.type}`;
+    nameSpan.textContent = item.name.trim();
+
+    const descSpan = document.createElement('span');
+    descSpan.className = 'desc';
+    descSpan.textContent = item.desc;
+
+    row.appendChild(nameSpan);
+    row.appendChild(descSpan);
+
+    if (item.badge) {
+      const badge = document.createElement('span');
+      badge.className = `badge-type badge-${item.badge}`;
+      const badgeLabels = { domain: 'Domain', application: 'Application', infrastructure: 'Infrastructure', presentation: 'Presentation', test: 'Test', root: 'Root' };
+      badge.textContent = badgeLabels[item.badge] || item.badge;
+      row.appendChild(badge);
+    }
+
+    node.appendChild(row);
+
+    // Detail panel
+    const detail = document.createElement('div');
+    detail.className = 'detail-panel';
+    detail.id = `detail-${idx}`;
+
+    // Try to generate rich detail based on the data
+    const detailTitle = document.createElement('div');
+    detailTitle.className = 'detail-title';
+    detailTitle.textContent = item.name.trim();
+    detail.appendChild(detailTitle);
+
+    const detailDesc = document.createElement('div');
+    detailDesc.className = 'detail-desc';
+    detailDesc.textContent = item.desc;
+    detail.appendChild(detailDesc);
+
+    // Add more context based on file type
+    const detailSub = document.createElement('div');
+    detailSub.className = 'detail-sub';
+
+    if (item.type === 'folder') {
+      const children = DATA.filter(d => d.name.startsWith(item.name + '  ') && d.name !== item.name && d.type !== 'separator');
+      const fileCount = children.filter(c => c.type === 'file').length;
+      const folderCount = children.filter(c => c.type === 'folder').length;
+      detailSub.innerHTML = `<strong>📊 المحتوى:</strong> ${folderCount} مجلد فرعي، ${fileCount} ملف`;
+    } else if (item.type === 'file') {
+      const ext = item.name.split('.').pop();
+      const langMap = { cs: 'C#', csproj: '.NET Project', json: 'JSON', yml: 'YAML', md: 'Markdown', props: 'MSBuild', sln: 'Solution', gitignore: 'Git Config' };
+      detailSub.innerHTML = `<strong>📄 النوع:</strong> ${langMap[ext] || ext}`;
+    }
+
+    detail.appendChild(detailSub);
+    node.appendChild(detail);
+    root.appendChild(node);
+  });
+}
+
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  const body = header.nextElementSibling;
+  body.classList.toggle('collapsed');
+}
+
+function toggleDetail(idx) {
+  const panel = document.getElementById(`detail-${idx}`);
+  const isOpen = panel.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('open'));
+  if (!isOpen) panel.classList.add('open');
+}
+
+buildTree();
+</script>
+</body>
+</html>
