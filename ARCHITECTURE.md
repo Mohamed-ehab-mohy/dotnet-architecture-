@@ -2,7 +2,7 @@
 
 > **Project:** dotnet-architecture  
 > **Architecture:** Clean Architecture + CQRS  
-> **Target:** .NET 8
+> **Target:** .NET 10
 
 ---
 
@@ -126,7 +126,7 @@ The Domain layer is the heart of the application. It contains enterprise-wide bu
 
 | File | Role |
 |------|------|
-| `Domain.csproj` | Project file - no external packages, pure .NET 8 class library |
+| `Domain.csproj` | Project file - no external packages, pure .NET 10 class library |
 
 ---
 

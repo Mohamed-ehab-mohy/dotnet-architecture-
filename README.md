@@ -1,6 +1,6 @@
 # .NET Clean Architecture
 
-A clean architecture solution template for .NET 8 applications following Domain-Driven Design principles and CQRS pattern.
+A clean architecture solution template for .NET 10 applications following Domain-Driven Design principles and CQRS pattern.
 
 ## Architecture Overview
 
@@ -23,7 +23,7 @@ A clean architecture solution template for .NET 8 applications following Domain-
 
 ## Technologies
 
-- **.NET 8** - Target Framework
+- **.NET 10** - Target Framework
 - **Entity Framework Core** - ORM for data access
 - **MediatR** - CQRS implementation
 - **FluentValidation** - Request validation
@@ -45,7 +45,7 @@ A clean architecture solution template for .NET 8 applications following Domain-
 
 ### Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - SQL Server (or Docker)
 
 ### Run with Docker
