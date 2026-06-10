@@ -296,7 +296,7 @@ The Infrastructure layer implements the interfaces defined in Domain and Applica
 
 | File | Role |
 |------|------|
-| `Infrastructure.csproj` | Project file referencing Application + NuGet packages (EF Core, SQL Server, Identity) |
+| `Infrastructure.csproj` | Project file referencing Application + NuGet packages (EF Core, Npgsql/PostgreSQL, Identity) |
 
 ---
 
@@ -390,7 +390,7 @@ The Presentation layer handles HTTP requests and responses.
 |------|------|
 | `Solution.sln` | Visual Studio Solution file referencing all 8 projects |
 | `Directory.Build.props` | Common MSBuild properties shared across all projects (TargetFramework, Nullable, ImplicitUsings) |
-| `docker-compose.yml` | Docker Compose file to run the API + SQL Server in containers |
+| `docker-compose.yml` | Docker Compose file to run the API + PostgreSQL in containers |
 | `Dockerfile` | Multi-stage Docker build file for the API project |
 | `.gitignore` | Git ignore rules for .NET, Visual Studio, NuGet, build artifacts |
 | `README.md` | Project overview, architecture diagram, setup instructions |

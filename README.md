@@ -24,7 +24,7 @@ A clean architecture solution template for .NET 10 applications following Domain
 ## Technologies
 
 - **.NET 10** - Target Framework
-- **Entity Framework Core** - ORM for data access
+- **Entity Framework Core + Npgsql** - ORM for data access (PostgreSQL)
 - **MediatR** - CQRS implementation
 - **FluentValidation** - Request validation
 - **AutoMapper** - Object mapping
@@ -46,7 +46,7 @@ A clean architecture solution template for .NET 10 applications following Domain
 ### Prerequisites
 
 - .NET 10 SDK
-- SQL Server (or Docker)
+- PostgreSQL (or Docker)
 
 ### Run with Docker
 

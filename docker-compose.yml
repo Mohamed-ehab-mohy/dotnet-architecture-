@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     image: clean-architecture-api
@@ -10,19 +8,20 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=CleanArchitectureDb;User=sa;Password=YourPassword123!;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=CleanArchitectureDb;Username=postgres;Password=postgres
     depends_on:
       - db
 
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:16-alpine
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourPassword123!
+      - POSTGRES_DB=CleanArchitectureDb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqldata:/var/opt/mssql
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-  sqldata:
+  pgdata:
